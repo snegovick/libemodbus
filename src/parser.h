@@ -2,7 +2,6 @@
 #define __PARSER_H__
 
 #include <circularbuf.h>
-#include <cdynstorage.h>
 
 #define COND_START 0
 #define COND_R 1
@@ -19,28 +18,39 @@ struct emb {
   unsigned int end;
 };
 
-int emb_init(struct emb *e, const uint8_t *storage, unsigned int storage_size, void (*process)(const void *data, unsigned int size)) {
+int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*process)(const void *data, unsigned int size)) {
   cb_init(&e->cb, storage, storage_size);
   e->process = process;
+  e->condition = COND_START;
   return CERR_OK;
 }
 
-int emb_push_data(struct emb *e, const uint8_t *new_data, unsigned int data_size) {
-  cb_push(&e->cb, new_data, data_size);
+int __emb_parse_incoming_data(struct emb *e) {
+}
+
+int emb_process_data(struct emb *e, const uint8_t *new_data, unsigned int data_size) {
   unsigned int i = 0;
   for (;i<data_size;i++) {
-    cb_push_byte(&e->cb, new_data[i]);
+    printf("pushing %c\r\n", new_data[i]);
     if ((e->condition == COND_START) && (new_data[i] == ':')) {
       e->condition = COND_R;
-      e->start = cb_get_current_position(&e->cb);
+      e->start = cb_get_current_position(&(e->cb));
+      cb_push_byte(&(e->cb), new_data[i]);
     } else if ((e->condition == COND_R) && (new_data[i] == '\r')) {
+      cb_push_byte(&(e->cb), new_data[i]);
       e->condition = COND_N;
     } else if ((e->condition == COND_N) && (new_data[i] == '\n')) {
       e->condition = COND_START;
+      cb_push_byte(&(e->cb), new_data[i]);
       e->end = cb_get_current_position(&e->cb);
-      if (cb_get_data(&e->cb, e->start, e->end, e->parse_buffer, STATIC_BUFFER_SIZE)>0) {
-        
+
+      unsigned int acq_size = 0;
+      if (cb_get_data(&e->cb, e->start, e->end, e->parse_buffer, STATIC_BUFFER_SIZE, &acq_size)==CERR_OK) {
+        e->process(e->parse_buffer, acq_size);
       }
+
+    } else {
+      cb_push_byte(&(e->cb), new_data[i]);
     }
   }
 }
