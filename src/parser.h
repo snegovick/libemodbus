@@ -117,6 +117,12 @@ uint8_t __hex_to_byte(uint8_t hi, uint8_t lo) {
   return byte;
 }
 
+uint16_t __hex_to_short(uint8_t hi0, uint8_t lo0, uint8_t hi1, uint8_t lo1) {
+  uint8_t hi = __hex_to_byte(hi0, lo0);
+  uint8_t lo = __hex_to_byte(hi1, lo1);
+  return (hi<<8 | lo);
+}
+
 int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*process_response)(const void *data, unsigned int size, struct response *rs), void (*process_query)(const void *data, unsigned int size, struct query *qs), int master) {
   cb_init(&e->cb, storage, storage_size);
   e->process_response = process_response;
@@ -157,6 +163,18 @@ int __emb_read_coil_status(struct emb *e, struct read_coil_status_r *rcsr, unsig
   return ret;
 }
 
+int __emb_force_single_coil(struct emb *e, struct force_single_coil_r *fscr, unsigned int *offset) {
+  int ret = CERR_OK;
+  uint8_t *pb = e->parse_buffer;
+
+  rcsr->address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
+  rcsr->data = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
+  return ret;
+}
+
+
 int __emb_parse_incoming_data(struct emb *e) {
   printf("processing new data\r\n");
   struct query_header qh;
@@ -165,16 +183,20 @@ int __emb_parse_incoming_data(struct emb *e) {
   if (e->master) {
     // if im master, then responses are incoming
     __emb_parse_header(e, &qh, &offset);
+    memcpy(&(rs.header), &qh, sizeof(struct query_header));
     switch (qh.function) {
     case F_READ_COIL_STATUS:
     case F_READ_INPUT_STATUS:
     case F_READ_INPUT_REGISTERS: {
-      memcpy(&(rs.header), &qh, sizeof(struct query_header));
       rs.rcsr.data = e->binary_data;
       __emb_read_coil_status(e, &(rs.rcsr), &offset);
       break;
     }
-      
+    case F_FORCE_SINGLE_COIL:
+    case F_PRESET_SINGLE_REGISTER: {
+      __emb_force_single_coil(e, &(rs.fscr), &offset);
+      break;
+    }
     }
   }
   e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
