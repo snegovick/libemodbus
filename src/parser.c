@@ -8,7 +8,7 @@ void process_response(const void * data, unsigned int size, struct response *rs)
   /* switch (rs->header.function) { */
     
   /* } */
-  printf("\r\nprocess data: ");
+  printf("\r\nprocess response: ");
   for (;i<size;i++) {
     printf("%c", data_ptr[i]);
   }
@@ -18,7 +18,7 @@ void process_query(const void * data, unsigned int size, struct query *qs) {
   int i = 0;
   char * data_ptr = (char*)data;
   printf("function: %i\r\n", qs->header.function);
-  printf("\r\nprocess data: ");
+  printf("\r\nprocess query: ");
   for (;i<size;i++) {
     printf("%c", data_ptr[i]);
   }

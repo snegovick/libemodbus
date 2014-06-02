@@ -2,6 +2,7 @@
 #define __PARSER_H__
 
 #include <circularbuf.h>
+#include <string.h>
 
 #define COND_START 0
 #define COND_R 1
@@ -70,6 +71,9 @@ struct query {
   union {
     struct read_coil_status_q rcsq;
     struct force_single_coil_q fscq;
+    struct read_input_status_q risq;
+    struct read_input_registers_q rirq;
+    struct preset_single_register_q psrq;
   };
 };
 
@@ -77,8 +81,10 @@ struct response {
   struct query_header header;
   union {
     struct read_coil_status_r rcsr;
+    struct read_input_status_r risr;
     struct read_holding_registers_r rhrr;
     struct force_single_coil_r fscr;
+    struct preset_single_register_r psrr;
   };
 };
 
@@ -147,7 +153,7 @@ int __emb_parse_header(struct emb *e, struct query_header *qh, unsigned int *off
   return ret;
 }
 
-int __emb_read_coil_status(struct emb *e, struct read_coil_status_r *rcsr, unsigned int *offset) {
+int __emb_read_coil_status_r(struct emb *e, struct read_coil_status_r *rcsr, unsigned int *offset) {
   int ret = CERR_OK;
   uint8_t *pb = e->parse_buffer;
   rcsr->byte_count = __hex_to_byte(pb[*offset], pb[*offset+1]);
@@ -163,43 +169,83 @@ int __emb_read_coil_status(struct emb *e, struct read_coil_status_r *rcsr, unsig
   return ret;
 }
 
-int __emb_force_single_coil(struct emb *e, struct force_single_coil_r *fscr, unsigned int *offset) {
+int __emb_force_single_coil_r(struct emb *e, struct force_single_coil_r *fscr, unsigned int *offset) {
   int ret = CERR_OK;
   uint8_t *pb = e->parse_buffer;
 
-  rcsr->address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  fscr->address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
   *offset+=4;
-  rcsr->data = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  fscr->data = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
+  return ret;
+}
+
+int __emb_read_coil_status_q(struct emb *e, struct read_coil_status_q *rcsq, unsigned int *offset) {
+  int ret = CERR_OK;
+  uint8_t *pb = e->parse_buffer;
+  rcsq->starting_address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  rcsq->number_of_points = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
+  return ret;
+}
+
+int __emb_force_single_coil_q(struct emb *e, struct force_single_coil_q *fscq, unsigned int *offset) {
+  int ret = CERR_OK;
+  uint8_t *pb = e->parse_buffer;
+
+  fscq->address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
+  fscq->data = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
   *offset+=4;
   return ret;
 }
 
 
 int __emb_parse_incoming_data(struct emb *e) {
-  printf("processing new data\r\n");
   struct query_header qh;
   unsigned int offset = 0;
   struct response rs;
+  struct query qs;
+
+  __emb_parse_header(e, &qh, &offset);
+
   if (e->master) {
-    // if im master, then responses are incoming
-    __emb_parse_header(e, &qh, &offset);
     memcpy(&(rs.header), &qh, sizeof(struct query_header));
+    /* if im master, then responses are incoming */
     switch (qh.function) {
     case F_READ_COIL_STATUS:
     case F_READ_INPUT_STATUS:
     case F_READ_INPUT_REGISTERS: {
       rs.rcsr.data = e->binary_data;
-      __emb_read_coil_status(e, &(rs.rcsr), &offset);
+      __emb_read_coil_status_r(e, &(rs.rcsr), &offset);
       break;
     }
     case F_FORCE_SINGLE_COIL:
     case F_PRESET_SINGLE_REGISTER: {
-      __emb_force_single_coil(e, &(rs.fscr), &offset);
+      __emb_force_single_coil_r(e, &(rs.fscr), &offset);
       break;
     }
     }
+    e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
+  } else {
+    memcpy(&(qs.header), &qh, sizeof(struct query_header));
+    /* else queries are incoming */
+    switch (qh.function) {
+    case F_READ_COIL_STATUS:
+    case F_READ_INPUT_STATUS:
+    case F_READ_INPUT_REGISTERS: {
+      __emb_read_coil_status_q(e, &(qs.rcsq), &offset);
+      break;
+    }
+    case F_FORCE_SINGLE_COIL:
+    case F_PRESET_SINGLE_REGISTER: {
+      __emb_force_single_coil_q(e, &(qs.fscq), &offset);
+      break;
+    }
+    }
+    e->process_query(e->parse_buffer, e->parse_buffer_offset, &(qs));
   }
-  e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
+
   return CERR_OK;
 }
 
