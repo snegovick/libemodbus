@@ -8,6 +8,6 @@ endif
 
 SUBDIRS = src $(EXTRA)
 
-TESTS = tests/clisttest tests/chashtest tests/cdstest tests/circbuftest
+TESTS = tests/emodbus
 
-include_HEADERS = src/chash.h src/clist.h src/clist_common.h src/cdynstorage.h src/circularbuf.h
+include_HEADERS = src/emodbus_parser.h src/emodbus_parser.c
