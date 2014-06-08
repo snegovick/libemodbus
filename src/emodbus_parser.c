@@ -124,6 +124,8 @@ int __emb_parse_incoming_data(struct emb *e) {
       __emb_force_single_coil_r(e, &(rs.fscr), &offset);
       break;
     }
+    default:
+      return CERR_GENERAL_ERROR;
     }
     e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
   } else {
@@ -141,6 +143,8 @@ int __emb_parse_incoming_data(struct emb *e) {
       __emb_force_single_coil_q(e, &(qs.fscq), &offset);
       break;
     }
+    default:
+      return CERR_GENERAL_ERROR;
     }
     e->process_query(e->parse_buffer, e->parse_buffer_offset, &(qs));
   }

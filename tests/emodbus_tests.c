@@ -66,7 +66,7 @@ void test_emb_responses(void)
     printf ("error\r\n");
   }
 
-  CU_ASSERT(n_responses==2);
+  CU_ASSERT(n_responses==1);
 }
 
 
