@@ -24,6 +24,9 @@
 #define F_PRESET_MULTIPLE_REGISTERS 16
 #define F_REPORT_SLAVE_ID           17
 
+#define EMB_MASTER 1
+#define EMB_SLAVE  0
+
 struct query_header {
   uint8_t header;
   uint8_t slave_address;

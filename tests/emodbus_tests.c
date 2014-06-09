@@ -2,13 +2,13 @@
 #include <emodbus_parser.h>
 #include <stdio.h>
 
-int init_emb_test_suite(void)
-{
+#define ADDRESS 1
+
+int init_emb_test_suite(void) {
   return 0;
 }
 
-int clean_emb_test_suite(void)
-{
+int clean_emb_test_suite(void) {
   return 0;  
 }
 
@@ -46,7 +46,7 @@ void test_emb_responses(void)
   char *buf = ":0603006Baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0003AB\r\ngjksdfg:0603006b0003AB\r\nsdghsdfdfghdfhsfh:210105cd6bb20e1b00\r\n:010105cd6bb20e1b00\r\nsdfglbhawset";
   uint8_t storage[32];
   struct emb e;
-  emb_init(&e, storage, 32, process_response, process_query, 1, 1);
+  emb_init(&e, storage, 32, process_response, process_query, EMB_MASTER, ADDRESS);
   int i = 1;
   char *c = buf;
   while (1) {
@@ -75,7 +75,7 @@ void test_emb_queries(void)
   char *buf = ":0603006Baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0003AB\r\ngjksdfg:0603006b0003AB\r\nsdghsdfdfghdfhsfh:210105cd6bb20e1b00\r\n:010105cd6bb20e1b00\r\nsdfglbhawset";
   uint8_t storage[32];
   struct emb e;
-  emb_init(&e, storage, 32, process_response, process_query, 0, 1);
+  emb_init(&e, storage, 32, process_response, process_query, EMB_SLAVE, ADDRESS);
   int i = 1;
   char *c = buf;
   while (1) {
