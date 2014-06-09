@@ -224,3 +224,12 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
   fscq->data = data;
   return CERR_OK;
 }
+
+int emb_query(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
+  //todo: implement me
+}
+
+int emb_response(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
+  //todo: implement me
+}
+
