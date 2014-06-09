@@ -57,11 +57,7 @@ struct force_single_coil_q {
   uint16_t address;
   uint16_t data;
 };
-
-struct force_single_coil_r {
-  uint16_t address;
-  uint16_t data;
-};
+#define force_single_coil_r force_single_coil_q
 
 #define preset_single_register_q force_single_coil_q
 #define preset_single_register_r force_single_coil_r
@@ -98,13 +94,27 @@ struct emb {
   void (*process_response)(const void *data, unsigned int size, struct response *rs);
   int condition;
   int master;
+  uint8_t address;
 };
 
 int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size,
              void (*process_response)(const void *data, unsigned int size, struct response *rs), 
-             void (*process_query)(const void *data, unsigned int size, struct query *qs), int master);
+             void (*process_query)(const void *data, unsigned int size, struct query *qs), int master, uint8_t address);
 void emb_recover(struct emb *e);
 int emb_push_data(struct emb *e, const uint8_t *new_data, unsigned int data_size);
 int emb_process_data(struct emb *e);
+
+int emb_read_coil_status_query(struct read_coil_status_q *rcsq, uint16_t starting_address, uint16_t number_of_points);
+int emb_read_coil_status_response(struct read_coil_status_r *rcsr, uint8_t byte_count, uint8_t *data);
+#define emb_read_input_status_query emb_read_coil_status_query
+#define emb_read_input_status_response emb_read_coil_status_response
+#define emb_read_holding_registers_query emb_read_coil_status_query
+int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t data);
+#define emb_read_input_registers_query emb_read_coil_status_query
+#define emb_read_input_registers_response emb_read_coil_status_response
+int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t address, uint16_t data);
+#define emb_force_single_coil_response emb_force_single_coil_query
+#define emb_preset_single_register_query emb_force_single_coil_query
+#define emb_preset_single_register_response emb_force_single_coil_response
 
 #endif/*__PARSER_H__*/

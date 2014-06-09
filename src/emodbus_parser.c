@@ -10,7 +10,7 @@ uint8_t __hex_to_byte(uint8_t hi, uint8_t lo) {
   } else if (b>='0' && b<='9') {
     byte = (uint8_t)b-'0';
   }
-  byte<<4;
+  byte<<=4;
   b = lo;
   if (b>='A' && b<='F') {
     byte |= (uint8_t)(b-'A');
@@ -28,8 +28,9 @@ uint16_t __hex_to_short(uint8_t hi0, uint8_t lo0, uint8_t hi1, uint8_t lo1) {
   return (hi<<8 | lo);
 }
 
-int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*process_response)(const void *data, unsigned int size, struct response *rs), void (*process_query)(const void *data, unsigned int size, struct query *qs), int master) {
+int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*process_response)(const void *data, unsigned int size, struct response *rs), void (*process_query)(const void *data, unsigned int size, struct query *qs), int master, uint8_t address) {
   cb_init(&e->cb, storage, storage_size);
+  e->address = address;
   e->process_response = process_response;
   e->process_query = process_query;
   e->condition = COND_START;
@@ -129,6 +130,9 @@ int __emb_parse_incoming_data(struct emb *e) {
     }
     e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
   } else {
+    if (qs.header.slave_address != e->address) {
+      return CERR_OK;
+    }
     memcpy(&(qs.header), &qh, sizeof(struct query_header));
     /* else queries are incoming */
     switch (qh.function) {
@@ -195,4 +199,28 @@ int emb_process_data(struct emb *e) {
     }
   }
   return ret;
+}
+
+int emb_read_coil_status_query(struct read_coil_status_q *rcsq, uint16_t starting_address, uint16_t number_of_points) {
+  rcsq->starting_address = starting_address;
+  rcsq->number_of_points = number_of_points;
+  return CERR_OK;
+}
+
+int emb_read_coil_status_response(struct read_coil_status_r *rcsr, uint8_t byte_count, uint8_t *data) {
+  rcsr->byte_count = byte_count;
+  rcsr->data = data;
+  return CERR_OK;
+}
+
+int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t data) {
+  rhrr->byte_count = byte_count;
+  rhrr->data = data;
+  return CERR_OK;
+}
+
+int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t address, uint16_t data) {
+  fscq->address = address;
+  fscq->data = data;
+  return CERR_OK;
 }
