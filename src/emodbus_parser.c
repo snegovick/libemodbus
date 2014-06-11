@@ -114,7 +114,11 @@ int __emb_parse_incoming_data(struct emb *e) {
   struct response rs;
   struct query qs;
 
-  __emb_parse_header(e, &qh, &offset);
+  int ret = __emb_parse_header(e, &qh, &offset);
+
+  if (ret!=CERR_OK) {
+    return ret;
+  }
 
   if (e->master) {
     memcpy(&(rs.header), &qh, sizeof(struct query_header));
@@ -137,10 +141,10 @@ int __emb_parse_incoming_data(struct emb *e) {
     }
     e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
   } else {
+    memcpy(&(qs.header), &qh, sizeof(struct query_header));
     if (qs.header.slave_address != e->address) {
       return CERR_OK;
     }
-    memcpy(&(qs.header), &qh, sizeof(struct query_header));
     /* else queries are incoming */
     switch (qh.function) {
     case F_READ_COIL_STATUS:
@@ -295,8 +299,14 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
     p++;
   }
   lrc = __lrc_get(lrc);
-
-  return 2*(sizeof(struct query_header) + struct_size);
+  __byte_to_hex(lrc, &hi, &lo);
+  data_buffer[i] = hi;
+  data_buffer[i+1] = lo;
+  i+=2;
+  data_buffer[i] = '\r';
+  data_buffer[i+1] = '\n';
+  
+  return (2*(sizeof(struct query_header) + struct_size)+CONTAINER_OVERHEAD);
 }
 
 int emb_response_serialize(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {

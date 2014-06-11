@@ -118,6 +118,12 @@ int main()
     CU_cleanup_registry();
     return CU_get_error();
   }
+
+  if (NULL == CU_ADD_TEST(pSuite, test_emb_queries))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
   
   CU_basic_set_mode(CU_BRM_VERBOSE);
   CU_basic_run_tests();
