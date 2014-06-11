@@ -30,7 +30,7 @@ uint16_t __hex_to_short(uint8_t hi0, uint8_t lo0, uint8_t hi1, uint8_t lo1) {
   return (hi<<8 | lo);
 }
 
-uint8_t hex_values[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+static uint8_t hex_values[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 void __byte_to_hex(uint8_t byte, uint8_t *hi, uint8_t *lo) {
   *hi = hex_values[byte>>4];
@@ -249,7 +249,7 @@ uint8_t __lrc_get(uint8_t lrc) {
   return ((lrc ^ 0xFF) + 1);
 }
 
-int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
+int emb_query_serialize(uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
   uint8_t *ptr = NULL;
   unsigned int struct_size = 0;
   switch (function) {
@@ -315,7 +315,7 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
   return (i);
 }
 
-int emb_response_serialize(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
+int emb_response_serialize(uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
   uint8_t *ptr = NULL;
   uint8_t *data_ptr = NULL;
   unsigned int struct_size = 0;

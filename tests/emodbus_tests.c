@@ -54,7 +54,7 @@ void test_ring(void) {
   struct query m_q;
   emb_fill_header(&m_q.header, ADDRESS, F_READ_COIL_STATUS);
   emb_read_coil_status_query(&m_q.rcsq, 0, 1);
-  int len = emb_query_serialize(&e_m, F_READ_COIL_STATUS, &m_q, buf, 1024);
+  int len = emb_query_serialize(F_READ_COIL_STATUS, &m_q, buf, 1024);
 
   //serialized message is in the buf, lets send it to slave
   printf("pushing %i [%s] bytes to slave\r\n", len, buf);
@@ -68,7 +68,7 @@ void test_ring(void) {
   emb_fill_header(&s_r.header, ADDRESS, F_READ_COIL_STATUS);
   uint8_t coil = 0;
   emb_read_coil_status_response(&s_r.rcsr, 1, &coil);
-  len = emb_response_serialize(&e_s, F_READ_COIL_STATUS, &s_r, buf, 1024);
+  len = emb_response_serialize(F_READ_COIL_STATUS, &s_r, buf, 1024);
 
   //push to master
   printf("pushing %i [%s] bytes to slave\r\n", len, buf);

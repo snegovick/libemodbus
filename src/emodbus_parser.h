@@ -121,6 +121,7 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
 #define emb_preset_single_register_response emb_force_single_coil_response
 int emb_fill_header(struct query_header *qh, uint8_t address, uint8_t function);
 
-int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size);
+int emb_query_serialize(uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size);
+int emb_response_serialize(uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size);
 
 #endif/*__PARSER_H__*/
