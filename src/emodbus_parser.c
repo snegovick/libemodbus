@@ -1,5 +1,7 @@
 #include "emodbus_parser.h"
 
+#define CONTAINER_OVERHEAD 5
+
 uint8_t __hex_to_byte(uint8_t hi, uint8_t lo) {
   uint8_t byte = 0;
   uint8_t b = hi;
@@ -49,9 +51,7 @@ int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*
 int __emb_parse_header(struct emb *e, struct query_header *qh, unsigned int *offset) {
   int ret = CERR_OK;
   uint8_t *pb = e->parse_buffer;
-  if (pb[0] == ':') {
-    qh->header = ':';
-  } else {
+  if (pb[0] != ':') {
     return CERR_ENOTFOUND;
   }
   qh->slave_address = __hex_to_byte(pb[1], pb[2]);
@@ -231,6 +231,14 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
   return CERR_OK;
 }
 
+uint8_t __lrc_add_byte(uint8_t lrc, uint8_t data) {
+  lrc = lrc + data;
+}
+
+uint8_t __lrc_get(uint8_t lrc) {
+  return ((lrc ^ 0xFF) + 1);
+}
+
 int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
   uint8_t *ptr = NULL;
   unsigned int struct_size = 0;
@@ -262,17 +270,20 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
   default:
     return CERR_ENOTFOUND;
   }
-  if (buffer_size < 2*(sizeof(q->header)+struct_size)) {
+  if (buffer_size < (2*(sizeof(q->header)+struct_size)+CONTAINER_OVERHEAD)) {
     return CERR_ENOMEM;
   }
-  int i = 0;
   uint8_t *p = (uint8_t *)&(q->header);
   uint8_t hi;
   uint8_t lo;
+  uint8_t lrc = 0;
+  data_buffer[0] = ':';
+  int i = 1;
   for (; i < 2*sizeof(struct query_header); i+=2) {
     __byte_to_hex(*p, &hi, &lo);
     data_buffer[i] = hi;
     data_buffer[i+1] = lo;
+    lrc = __lrc_add_byte(lrc, *p);
     p++;
   }
   p = ptr;
@@ -280,8 +291,10 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
     __byte_to_hex(*p, &hi, &lo);
     data_buffer[i] = hi;
     data_buffer[i+1] = lo;
+    lrc = __lrc_add_byte(lrc, *p);
     p++;
   }
+  lrc = __lrc_get(lrc);
 
   return 2*(sizeof(struct query_header) + struct_size);
 }
@@ -289,4 +302,3 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
 int emb_response_serialize(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
   return 0;
 }
-
