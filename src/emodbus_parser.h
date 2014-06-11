@@ -69,9 +69,10 @@ struct query {
   struct query_header header;
   union {
     struct read_coil_status_q rcsq;
-    struct force_single_coil_q fscq;
     struct read_input_status_q risq;
+    struct read_holding_registers_q rhrq;
     struct read_input_registers_q rirq;
+    struct force_single_coil_q fscq;
     struct preset_single_register_q psrq;
   };
 };
@@ -112,7 +113,7 @@ int emb_read_coil_status_response(struct read_coil_status_r *rcsr, uint8_t byte_
 #define emb_read_input_status_query emb_read_coil_status_query
 #define emb_read_input_status_response emb_read_coil_status_response
 #define emb_read_holding_registers_query emb_read_coil_status_query
-int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t data);
+int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t *data);
 #define emb_read_input_registers_query emb_read_coil_status_query
 #define emb_read_input_registers_response emb_read_coil_status_response
 int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t address, uint16_t data);

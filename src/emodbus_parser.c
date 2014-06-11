@@ -28,6 +28,13 @@ uint16_t __hex_to_short(uint8_t hi0, uint8_t lo0, uint8_t hi1, uint8_t lo1) {
   return (hi<<8 | lo);
 }
 
+uint8_t hex_values[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+void __byte_to_hex(uint8_t byte, uint8_t *hi, uint8_t *lo) {
+  *hi = hex_values[byte>>4];
+  *lo = hex_values[byte&0x0F];
+}
+
 int emb_init(struct emb *e, uint8_t *storage, unsigned int storage_size, void (*process_response)(const void *data, unsigned int size, struct response *rs), void (*process_query)(const void *data, unsigned int size, struct query *qs), int master, uint8_t address) {
   cb_init(&e->cb, storage, storage_size);
   e->address = address;
@@ -167,7 +174,6 @@ int emb_push_data(struct emb *e, const uint8_t *new_data, unsigned int data_size
 
 int emb_process_data(struct emb *e) {
   int ret = CERR_OK;
-  unsigned int i = 0;
   uint8_t c;
   while (cb_get_allocated_space(&(e->cb))>0) {
     cb_pop(&(e->cb), &c, 1);
@@ -213,7 +219,7 @@ int emb_read_coil_status_response(struct read_coil_status_r *rcsr, uint8_t byte_
   return CERR_OK;
 }
 
-int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t data) {
+int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t *data) {
   rhrr->byte_count = byte_count;
   rhrr->data = data;
   return CERR_OK;
@@ -225,11 +231,62 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
   return CERR_OK;
 }
 
-int emb_query(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
-  //todo: implement me
+int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size) {
+  uint8_t *ptr = NULL;
+  unsigned int struct_size = 0;
+  switch (function) {
+  case F_READ_COIL_STATUS:
+    ptr = (uint8_t *)&(q->rcsq);
+    struct_size = sizeof(q->rcsq);
+    break;
+  case F_READ_INPUT_STATUS:
+    ptr = (uint8_t *)&(q->risq);
+    struct_size = sizeof(q->risq);
+    break;
+  case F_READ_HOLDING_REGISTERS:
+    ptr = (uint8_t *)&(q->rhrq);
+    struct_size = sizeof(q->rhrq);
+    break;
+  case F_READ_INPUT_REGISTERS:
+    ptr = (uint8_t *)&(q->rirq);
+    struct_size = sizeof(q->rirq);
+    break;
+  case F_FORCE_SINGLE_COIL:
+    ptr = (uint8_t *)&(q->fscq);
+    struct_size = sizeof(q->fscq);
+    break;
+  case F_PRESET_SINGLE_REGISTER:
+    ptr = (uint8_t *)&(q->psrq);
+    struct_size = sizeof(q->psrq);
+    break;
+  default:
+    return CERR_ENOTFOUND;
+  }
+  if (buffer_size < 2*(sizeof(q->header)+struct_size)) {
+    return CERR_ENOMEM;
+  }
+  int i = 0;
+  uint8_t *p = (uint8_t *)&(q->header);
+  uint8_t hi;
+  uint8_t lo;
+  for (; i < 2*sizeof(struct query_header); i+=2) {
+    __byte_to_hex(*p, &hi, &lo);
+    data_buffer[i] = hi;
+    data_buffer[i+1] = lo;
+    p++;
+  }
+  p = ptr;
+  for (; i < 2*struct_size; i+=2) {
+    __byte_to_hex(*p, &hi, &lo);
+    data_buffer[i] = hi;
+    data_buffer[i+1] = lo;
+    p++;
+  }
+
+  return 2*(sizeof(struct query_header) + struct_size);
 }
 
-int emb_response(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
-  //todo: implement me
+int emb_response_serialize(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
+  return 0;
 }
 
