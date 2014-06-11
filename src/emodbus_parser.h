@@ -27,17 +27,17 @@
 #define EMB_MASTER 1
 #define EMB_SLAVE  0
 
-struct query_header __attribute__((packed)){
+struct __attribute__((packed)) query_header {
   uint8_t slave_address;
   uint8_t function;
 };
 
-struct read_coil_status_q __attribute__((packed)){
+struct __attribute__((packed)) read_coil_status_q {
   uint16_t starting_address;
   uint16_t number_of_points;
 };
 
-struct read_coil_status_r {
+struct __attribute__((packed)) read_coil_status_r {
   uint8_t byte_count;
   uint8_t *data;
 };
@@ -47,7 +47,7 @@ struct read_coil_status_r {
 
 #define read_holding_registers_q read_coil_status_q
 
-struct read_holding_registers_r {
+struct __attribute__((packed)) read_holding_registers_r {
   uint8_t byte_count;
   uint16_t *data;
 };
@@ -55,7 +55,7 @@ struct read_holding_registers_r {
 #define read_input_registers_q read_coil_status_q
 #define read_input_registers_r read_holding_registers_r
 
-struct force_single_coil_q __attribute__((packed)){
+struct __attribute__((packed)) force_single_coil_q {
   uint16_t address;
   uint16_t data;
 };
@@ -119,6 +119,7 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
 #define emb_force_single_coil_response emb_force_single_coil_query
 #define emb_preset_single_register_query emb_force_single_coil_query
 #define emb_preset_single_register_response emb_force_single_coil_response
+int emb_fill_header(struct query_header *qh, uint8_t address, uint8_t function);
 
 int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size);
 
