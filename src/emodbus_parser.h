@@ -27,12 +27,12 @@
 #define EMB_MASTER 1
 #define EMB_SLAVE  0
 
-struct query_header {
+struct query_header __attribute__((packed)){
   uint8_t slave_address;
   uint8_t function;
 };
 
-struct read_coil_status_q {
+struct read_coil_status_q __attribute__((packed)){
   uint16_t starting_address;
   uint16_t number_of_points;
 };
@@ -55,7 +55,7 @@ struct read_holding_registers_r {
 #define read_input_registers_q read_coil_status_q
 #define read_input_registers_r read_holding_registers_r
 
-struct force_single_coil_q {
+struct force_single_coil_q __attribute__((packed)){
   uint16_t address;
   uint16_t data;
 };
@@ -82,11 +82,11 @@ struct response {
     struct read_coil_status_r rcsr;
     struct read_input_status_r risr;
     struct read_holding_registers_r rhrr;
+    struct read_input_registers_r rirr;
     struct force_single_coil_r fscr;
     struct preset_single_register_r psrr;
   };
 };
-
 
 struct emb {
   struct circular_buffer cb;

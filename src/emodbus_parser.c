@@ -310,5 +310,90 @@ int emb_query_serialize(struct emb* e, uint8_t function, struct query *q, uint8_
 }
 
 int emb_response_serialize(struct emb* e, uint8_t function, struct response *r, uint8_t *data_buffer, unsigned int buffer_size) {
-  return 0;
+  uint8_t *ptr = NULL;
+  uint8_t *data_ptr = NULL;
+  unsigned int struct_size = 0;
+  switch (function) {
+  case F_READ_COIL_STATUS:
+    ptr = (uint8_t *)&(r->rcsr);
+    struct_size = r->rcsr.byte_count+sizeof(uint8_t);
+    data_ptr = (uint8_t *)r->rcsr.data;
+    break;
+  case F_READ_INPUT_STATUS:
+    ptr = (uint8_t *)&(r->risr);
+    struct_size = r->risr.byte_count+sizeof(uint8_t);
+    data_ptr = (uint8_t *)r->risr.data;
+    break;
+  case F_READ_HOLDING_REGISTERS:
+    ptr = (uint8_t *)&(r->rhrr);
+    struct_size = r->rhrr.byte_count+sizeof(uint8_t);
+    data_ptr = (uint8_t *)r->rhrr.data;
+    break;
+  case F_READ_INPUT_REGISTERS:
+    ptr = (uint8_t *)&(r->rirr);
+    struct_size = r->rirr.byte_count+sizeof(uint8_t);
+    data_ptr = (uint8_t *)r->rirr.data;
+    break;
+  case F_FORCE_SINGLE_COIL:
+    ptr = (uint8_t *)&(r->fscr);
+    struct_size = sizeof(r->fscr)
+    data_ptr = NULL;
+    break;
+  case F_PRESET_SINGLE_REGISTER:
+    ptr = (uint8_t *)&(r->fsrr);
+    struct_size = sizeof(r->fsrr)
+    data_ptr = NULL;
+    break;
+  default:
+    return CERR_ENOTFOUND;
+  }
+  if (buffer_size < (2*(sizeof(q->header)+struct_size)+CONTAINER_OVERHEAD)) {
+    return CERR_ENOMEM;
+  }
+  uint8_t *p = (uint8_t *)&(q->header);
+  uint8_t hi;
+  uint8_t lo;
+  uint8_t lrc = 0;
+  data_buffer[0] = ':';
+  int i = 1;
+  for (; i < 2*sizeof(struct query_header); i+=2) {
+    __byte_to_hex(*p, &hi, &lo);
+    data_buffer[i] = hi;
+    data_buffer[i+1] = lo;
+    lrc = __lrc_add_byte(lrc, *p);
+    p++;
+  }
+
+  if (data_ptr == NULL) {
+    p = ptr;
+    for (; i < 2*struct_size; i+=2) {
+      __byte_to_hex(*p, &hi, &lo);
+      data_buffer[i] = hi;
+      data_buffer[i+1] = lo;
+      lrc = __lrc_add_byte(lrc, *p);
+      p++;
+    }
+  } else {
+    __byte_to_hex(*ptr, &hi, &lo);
+    data_buffer[i] = hi;
+    data_buffer[i+1] = lo;
+    i+=2;
+    p = data_ptr;
+    for (; i < 2*struct_size; i+=2) {
+      __byte_to_hex(*p, &hi, &lo);
+      data_buffer[i] = hi;
+      data_buffer[i+1] = lo;
+      lrc = __lrc_add_byte(lrc, *p);
+      p++;
+    }
+  }
+  lrc = __lrc_get(lrc);
+  __byte_to_hex(lrc, &hi, &lo);
+  data_buffer[i] = hi;
+  data_buffer[i+1] = lo;
+  i+=2;
+  data_buffer[i] = '\r';
+  data_buffer[i+1] = '\n';
+  
+  return (2*(sizeof(struct query_header) + struct_size)+CONTAINER_OVERHEAD);
 }
