@@ -117,7 +117,7 @@ int __emb_read_holding_registers_r(struct emb *e, struct read_holding_registers_
     return CERR_ENOMEM;
   }
   for (;i<rhrr->byte_count;i+=2) {
-    rhrr->data[i] = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+    rhrr->data[i] = __hex_to_short(pb[*offset+2], pb[*offset+3], pb[*offset], pb[*offset+1]);
     *offset+=4;
   }
   return ret;
