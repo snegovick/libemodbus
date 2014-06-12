@@ -107,6 +107,22 @@ int __emb_force_single_coil_q(struct emb *e, struct force_single_coil_q *fscq, u
   return ret;
 }
 
+int __emb_read_holding_registers_r(struct emb *e, struct read_holding_registers_r *rhrr, unsigned int *offset) {
+  int ret = CERR_OK;
+  uint8_t *pb = e->parse_buffer;
+  rhrr->byte_count = __hex_to_byte(pb[*offset], pb[*offset+1]);
+  *offset+=2;
+  unsigned int i = 0;
+  if (rhrr->byte_count > BINARY_BUFFER_SIZE) {
+    return CERR_ENOMEM;
+  }
+  for (;i<rhrr->byte_count;i+=2) {
+    rhrr->data[i] = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+    *offset+=4;
+  }
+  return ret;
+}
+
 
 int __emb_parse_incoming_data(struct emb *e) {
   struct query_header qh;
@@ -136,6 +152,11 @@ int __emb_parse_incoming_data(struct emb *e) {
       __emb_force_single_coil_r(e, &(rs.fscr), &offset);
       break;
     }
+    case F_READ_HOLDING_REGISTERS: {
+      rs.rhrr.data = e->binary_data;
+      __emb_read_holding_registers_r(e, &(rs.rhrr), &offset);
+      break;
+    }
     default:
       return CERR_GENERAL_ERROR;
     }
@@ -148,6 +169,7 @@ int __emb_parse_incoming_data(struct emb *e) {
     /* else queries are incoming */
     switch (qh.function) {
     case F_READ_COIL_STATUS:
+    case F_READ_HOLDING_REGISTERS:
     case F_READ_INPUT_STATUS:
     case F_READ_INPUT_REGISTERS: {
       __emb_read_coil_status_q(e, &(qs.rcsq), &offset);
