@@ -24,6 +24,15 @@
 #define F_PRESET_MULTIPLE_REGISTERS 16
 #define F_REPORT_SLAVE_ID           17
 
+#define E_ILLEGAL_FUNCTION     1
+#define E_ILLEGAL_DATA_ADDRESS 2
+#define E_ILLEGAL_DATA_VALUE   3
+#define E_SLAVE_DEVICE_FAILURE 4
+#define E_ACKNOWLEDGE          5
+#define E_SLAVE_DEVICE_BUSY    6
+#define E_NEGATIVE_ACKNOWLEDGE 7
+#define E_MEMORY_PARITY_ERROR  8
+
 #define EMB_MASTER 1
 #define EMB_SLAVE  0
 
@@ -31,6 +40,9 @@ struct __attribute__((packed)) query_header {
   uint8_t slave_address;
   uint8_t function;
 };
+
+#define SET_ERROR(a) (a=a|(1<<7))
+#define IS_ERROR_SET(a) (a & (1<<7)
 
 struct __attribute__((packed)) read_coil_status_q {
   uint16_t starting_address;
