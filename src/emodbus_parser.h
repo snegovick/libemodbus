@@ -42,7 +42,7 @@ struct __attribute__((packed)) query_header {
 };
 
 #define SET_ERROR(a) (a=a|(1<<7))
-#define IS_ERROR_SET(a) (a & (1<<7)
+#define IS_ERROR_SET(a) (a & (1<<7))
 
 struct __attribute__((packed)) read_coil_status_q {
   uint16_t starting_address;
@@ -76,14 +76,18 @@ struct __attribute__((packed)) force_single_coil_q {
 #define preset_single_register_q force_single_coil_q
 #define preset_single_register_r force_single_coil_r
 
+struct __attribute__((packed)) exception_r {
+  uint8_t exception_code;
+};
+
 struct query {
   struct query_header header;
   union {
-    struct read_coil_status_q rcsq;
-    struct read_input_status_q risq;
+    struct read_coil_status_q       rcsq;
+    struct read_input_status_q      risq;
     struct read_holding_registers_q rhrq;
-    struct read_input_registers_q rirq;
-    struct force_single_coil_q fscq;
+    struct read_input_registers_q   rirq;
+    struct force_single_coil_q      fscq;
     struct preset_single_register_q psrq;
   };
 };
@@ -91,12 +95,13 @@ struct query {
 struct response {
   struct query_header header;
   union {
-    struct read_coil_status_r rcsr;
-    struct read_input_status_r risr;
+    struct read_coil_status_r       rcsr;
+    struct read_input_status_r      risr;
     struct read_holding_registers_r rhrr;
-    struct read_input_registers_r rirr;
-    struct force_single_coil_r fscr;
+    struct read_input_registers_r   rirr;
+    struct force_single_coil_r      fscr;
     struct preset_single_register_r psrr;
+    struct exception_r              er;
   };
 };
 

@@ -60,6 +60,14 @@ int __emb_parse_header(struct emb *e, struct query_header *qh, unsigned int *off
   return ret;
 }
 
+int __emb_exception_r(struct emb *e, struct exception_r *er, unsigned int *offset) {
+  int ret = CERR_OK;
+  uint8_t *pb = e->parse_buffer;
+  er->exception_code = __hex_to_byte(pb[*offset], pb[*offset+1]);
+  *offset+=2;
+  return ret;
+}
+
 int __emb_read_coil_status_r(struct emb *e, struct read_coil_status_r *rcsr, unsigned int *offset) {
   int ret = CERR_OK;
   uint8_t *pb = e->parse_buffer;
@@ -139,26 +147,30 @@ int __emb_parse_incoming_data(struct emb *e) {
   if (e->master) {
     memcpy(&(rs.header), &qh, sizeof(struct query_header));
     /* if im master, then responses are incoming */
-    switch (qh.function) {
-    case F_READ_COIL_STATUS:
-    case F_READ_INPUT_STATUS:
-    case F_READ_INPUT_REGISTERS: {
-      rs.rcsr.data = e->binary_data;
-      __emb_read_coil_status_r(e, &(rs.rcsr), &offset);
-      break;
-    }
-    case F_FORCE_SINGLE_COIL:
-    case F_PRESET_SINGLE_REGISTER: {
-      __emb_force_single_coil_r(e, &(rs.fscr), &offset);
-      break;
-    }
-    case F_READ_HOLDING_REGISTERS: {
-      rs.rhrr.data = e->binary_data;
-      __emb_read_holding_registers_r(e, &(rs.rhrr), &offset);
-      break;
-    }
-    default:
-      return CERR_GENERAL_ERROR;
+    if (IS_ERROR_SET(rs.header.function)) {
+      __emb_exception_r(e, &rs.er, &offset);
+    } else {
+      switch (qh.function) {
+      case F_READ_COIL_STATUS:
+      case F_READ_INPUT_STATUS:
+      case F_READ_INPUT_REGISTERS: {
+        rs.rcsr.data = e->binary_data;
+        __emb_read_coil_status_r(e, &(rs.rcsr), &offset);
+        break;
+      }
+      case F_FORCE_SINGLE_COIL:
+      case F_PRESET_SINGLE_REGISTER: {
+        __emb_force_single_coil_r(e, &(rs.fscr), &offset);
+        break;
+      }
+      case F_READ_HOLDING_REGISTERS: {
+        rs.rhrr.data = (uint16_t*)e->binary_data;
+        __emb_read_holding_registers_r(e, &(rs.rhrr), &offset);
+        break;
+      }
+      default:
+        return CERR_GENERAL_ERROR;
+      }
     }
     e->process_response(e->parse_buffer, e->parse_buffer_offset, &(rs));
   } else {
