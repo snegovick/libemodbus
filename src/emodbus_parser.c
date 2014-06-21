@@ -358,39 +358,45 @@ int emb_response_serialize(uint8_t function, struct response *r, uint8_t *data_b
   uint8_t *ptr = NULL;
   uint8_t *data_ptr = NULL;
   unsigned int struct_size = 0;
-  switch (function) {
-  case F_READ_COIL_STATUS:
-    ptr = (uint8_t *)&(r->rcsr);
-    struct_size = r->rcsr.byte_count;
-    data_ptr = (uint8_t *)r->rcsr.data;
-    break;
-  case F_READ_INPUT_STATUS:
-    ptr = (uint8_t *)&(r->risr);
-    struct_size = r->risr.byte_count;
-    data_ptr = (uint8_t *)r->risr.data;
-    break;
-  case F_READ_HOLDING_REGISTERS:
-    ptr = (uint8_t *)&(r->rhrr);
-    struct_size = r->rhrr.byte_count;
-    data_ptr = (uint8_t *)r->rhrr.data;
-    break;
-  case F_READ_INPUT_REGISTERS:
-    ptr = (uint8_t *)&(r->rirr);
-    struct_size = r->rirr.byte_count;
-    data_ptr = (uint8_t *)r->rirr.data;
-    break;
-  case F_FORCE_SINGLE_COIL:
-    ptr = (uint8_t *)&(r->fscr);
-    struct_size = sizeof(r->fscr);
+  if (IS_ERROR_SET(function)) {
+    ptr = (uint8_t *)&(r->er);
+    struct_size = sizeof(r->er);
     data_ptr = NULL;
-    break;
-  case F_PRESET_SINGLE_REGISTER:
-    ptr = (uint8_t *)&(r->psrr);
-    struct_size = sizeof(r->psrr);
-    data_ptr = NULL;
-    break;
-  default:
-    return CERR_ENOTFOUND;
+  } else {
+    switch (function) {
+    case F_READ_COIL_STATUS:
+      ptr = (uint8_t *)&(r->rcsr);
+      struct_size = r->rcsr.byte_count;
+      data_ptr = (uint8_t *)r->rcsr.data;
+      break;
+    case F_READ_INPUT_STATUS:
+      ptr = (uint8_t *)&(r->risr);
+      struct_size = r->risr.byte_count;
+      data_ptr = (uint8_t *)r->risr.data;
+      break;
+    case F_READ_HOLDING_REGISTERS:
+      ptr = (uint8_t *)&(r->rhrr);
+      struct_size = r->rhrr.byte_count;
+      data_ptr = (uint8_t *)r->rhrr.data;
+      break;
+    case F_READ_INPUT_REGISTERS:
+      ptr = (uint8_t *)&(r->rirr);
+      struct_size = r->rirr.byte_count;
+      data_ptr = (uint8_t *)r->rirr.data;
+      break;
+    case F_FORCE_SINGLE_COIL:
+      ptr = (uint8_t *)&(r->fscr);
+      struct_size = sizeof(r->fscr);
+      data_ptr = NULL;
+      break;
+    case F_PRESET_SINGLE_REGISTER:
+      ptr = (uint8_t *)&(r->psrr);
+      struct_size = sizeof(r->psrr);
+      data_ptr = NULL;
+      break;
+    default:
+      return CERR_ENOTFOUND;
+    }
   }
   if (buffer_size < (2*(sizeof(r->header)+struct_size)+CONTAINER_OVERHEAD)) {
     return CERR_ENOMEM;

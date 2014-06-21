@@ -11,7 +11,6 @@
 #define STATIC_BUFFER_SIZE 128
 #define BINARY_BUFFER_SIZE 128
 
-
 #define F_READ_COIL_STATUS          1
 #define F_READ_INPUT_STATUS         2
 #define F_READ_HOLDING_REGISTERS    3
