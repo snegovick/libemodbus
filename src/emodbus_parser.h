@@ -136,6 +136,7 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
 #define emb_force_single_coil_response emb_force_single_coil_query
 #define emb_preset_single_register_query emb_force_single_coil_query
 #define emb_preset_single_register_response emb_force_single_coil_response
+int emb_exception_response(struct exception_r *er, uint8_t exception_code);
 int emb_fill_header(struct query_header *qh, uint8_t address, uint8_t function);
 
 int emb_query_serialize(uint8_t function, struct query *q, uint8_t *data_buffer, unsigned int buffer_size);

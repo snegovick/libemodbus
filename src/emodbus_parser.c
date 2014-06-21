@@ -269,6 +269,11 @@ int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t addre
   return CERR_OK;
 }
 
+int emb_exception_response(struct exception_r *er, uint8_t exception_code) {
+  er->exception_code = exception_code;
+  return CERR_OK;
+}
+
 int emb_fill_header(struct query_header *qh, uint8_t address, uint8_t function) {
   qh->slave_address = address;
   qh->function = function;
