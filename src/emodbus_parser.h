@@ -40,7 +40,7 @@ struct __attribute__((packed)) query_header {
   uint8_t function;
 };
 
-#define SET_ERROR(a) (a=a|(1<<7))
+#define SET_ERROR(a) (a|(1<<7))
 #define IS_ERROR_SET(a) (a & (1<<7))
 
 struct __attribute__((packed)) read_coil_status_q {
