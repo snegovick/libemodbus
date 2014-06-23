@@ -130,7 +130,7 @@ int emb_read_coil_status_response(struct read_coil_status_r *rcsr, uint8_t byte_
 #define emb_read_holding_registers_query emb_read_coil_status_query
 int emb_read_holding_registers_response(struct read_holding_registers_r *rhrr, uint8_t byte_count, uint16_t *data);
 #define emb_read_input_registers_query emb_read_coil_status_query
-#define emb_read_input_registers_response emb_read_coil_status_response
+#define emb_read_input_registers_response emb_read_holding_registers_response
 int emb_force_single_coil_query(struct force_single_coil_q *fscq, uint16_t address, uint16_t data);
 #define emb_force_single_coil_response emb_force_single_coil_query
 #define emb_preset_single_register_query emb_force_single_coil_query

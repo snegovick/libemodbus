@@ -99,6 +99,7 @@ int __emb_read_coil_status_q(struct emb *e, struct read_coil_status_q *rcsq, uns
   int ret = CERR_OK;
   uint8_t *pb = e->parse_buffer;
   rcsq->starting_address = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
+  *offset+=4;
   rcsq->number_of_points = __hex_to_short(pb[*offset], pb[*offset+1], pb[*offset+2], pb[*offset+3]);
   *offset+=4;
   return ret;
