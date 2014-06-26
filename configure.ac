@@ -27,7 +27,7 @@ else
 fi
 
 PKG_CHECK_MODULES(CCONTAINER, libccontainer >= 1.0.1)
-
+PKG_CHECK_MODULES(CUNIT, cunit >= 1.0.1)
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
