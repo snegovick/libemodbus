@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([libemodbus], [1.0.0], [snegovick@gmail.com])
+AC_INIT([libemodbus], [1.0.0], [snegovick@uprojects.org])
 
 AC_CONFIG_AUX_DIR([./config])
 AC_CONFIG_MACRO_DIR([m4])
@@ -27,7 +27,6 @@ else
 fi
 
 PKG_CHECK_MODULES(CCONTAINER, libccontainer >= 1.0.1)
-PKG_CHECK_MODULES(CUNIT, cunit >= 1.0.1)
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
