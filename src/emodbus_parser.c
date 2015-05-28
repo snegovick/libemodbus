@@ -6,18 +6,18 @@ uint8_t __hex_to_byte(uint8_t hi, uint8_t lo) {
   uint8_t byte = 0;
   uint8_t b = hi;
   if (b>='A' && b<='F') {
-    byte = (uint8_t)(b-'A');
+    byte = (uint8_t)(b-'A'+0xA);
   } else if (b>='a' && b<='f') {
-    byte = (uint8_t)(b-'a');
+    byte = (uint8_t)(b-'a'+0xa);
   } else if (b>='0' && b<='9') {
     byte = (uint8_t)b-'0';
   }
   byte<<=4;
   b = lo;
   if (b>='A' && b<='F') {
-    byte |= (uint8_t)(b-'A');
+    byte |= (uint8_t)(b-'A'+0xA);
   } else if (b>='a' && b<='f') {
-    byte |= (uint8_t)(b-'a');
+    byte |= (uint8_t)(b-'a'+0xa);
   } else if (b>='0' && b<='9') {
     byte |= (uint8_t)b-'0';
   }
@@ -25,9 +25,9 @@ uint8_t __hex_to_byte(uint8_t hi, uint8_t lo) {
 }
 
 uint16_t __hex_to_short(uint8_t hi0, uint8_t lo0, uint8_t hi1, uint8_t lo1) {
-  uint8_t hi = __hex_to_byte(hi0, lo0);
-  uint8_t lo = __hex_to_byte(hi1, lo1);
-  return (hi<<8 | lo);
+  uint16_t hi = __hex_to_byte(hi0, lo0);
+  uint16_t lo = __hex_to_byte(hi1, lo1);
+  return (uint16_t)(hi<<8 | lo);
 }
 
 static uint8_t hex_values[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
